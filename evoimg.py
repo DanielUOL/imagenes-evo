@@ -16,16 +16,14 @@ class Individual:
 		for i in range(n):
 			center = (random.randint(0,w),random.randint(0,h))
 			radius = random.randint(0,r)
-			#color = random.randint(0,255)
 			color = 255
 			self.adn.append([center,radius,(color,color,color)])
 
 	def mutation(self):
 		for i in range(self.n//2):
-			point = random.randint(0,self.n-1)
+			point = random.randint(0,self.n-2)
 			center = (random.randint(0,self.w),random.randint(0,self.h))
 			radius = random.randint(0,self.r)
-			#color = random.randint(0,255)
 			color = 255
 			self.adn[point] = [center,radius,(color,color,color)]
 
@@ -33,6 +31,7 @@ class Individual:
 		point = random.randint(1,self.n-2)
 		adn1 = []
 		adn2 = []
+
 		for i in range(0,point):
 			adn1.append(self.adn[i])
 			adn2.append(I2.adn[i])
@@ -48,62 +47,68 @@ class Individual:
 		return H1,H2
 
 
-def fitness(img,opt,h,w):
-	value = 0
-	for i in range(h):
-		for j in range(w):
-			#if img[i][j][0] != opt[i][j][0] or img[i][j][1] != opt[i][j][1] or img[i][j][2] != opt[i][j][2]:
-			#	value +=1
-			if img[i][j][0] != opt[i][j]:
-				value +=1
-	return value
+	def fitness(self,opt):
+		value = 0
+		img = np.zeros((self.h,self.w,3), np.uint8)
+
+		for circle in self.adn:
+			cv2.circle(img,circle[0],circle[1],circle[2],-1)
+
+		for i in range(self.h):
+			for j in range(self.w):
+				if img[i][j][0] != opt[i][j]:
+					value +=1
+		return value
 
 optimal = cv2.imread('manzana.png',0)
 
-n = 600
-resolution = 20
+C = 600  # Cantidad de circulos
+R = 20  # Radio
+N = 100  # Individuos
+pm = 0.8  # Probabilidad de mutacion
+width = 480  # Ancho
+height = 583  # Alto
+G = 100 # Numero de generaciones
 
-imagen = Individual(n,480,583,resolution)
-imagen2 = Individual(n,480,583,resolution)
+Population = [Individual(C,width,height,R) for i in range(N)]
 
-#Imagen de padre 1
+for i in range(G):
+	print("Generacion ",i)
+	offspring = []
+	for j in range(N//2):
+		torneo = []
+		for i in range(2):
+			ind1 = Population[random.randint(0,N-1)]
+			ind2 = Population[random.randint(0,N-1)]
+			if ind1.fitness(optimal) < ind2.fitness(optimal):
+				torneo.append(ind1)
+			else:
+				torneo.append(ind2)
+
+		H1,H2 = torneo[0].crossover(torneo[1])
+
+		if random.random() <= pm:
+			H1.mutation()
+		if random.random() <= pm:
+			H2.mutation()
+
+		offspring.append(H1)
+		offspring.append(H2)
+
+	plebada = Population + offspring
+	plebada.sort(key=lambda x: -x.fitness(optimal))
+	population = plebada[:N]
+
+
+
+img1 = np.zeros((583,480,3), np.uint8)
+for circle in Population[0].adn:
+	cv2.circle(img1,circle[0],circle[1],circle[2],-1)
+cv2.imwrite('original.png',img1)
+
+"""
 img1 = np.zeros((583,480,3), np.uint8)
 for circle in imagen.adn:
 	cv2.circle(img1,circle[0],circle[1],circle[2],-1)
 cv2.imwrite('original.png',img1)
-
-#dif = fitness(img1,optimal,480,583)
-print(optimal[90][164])
-print(optimal[230][320])
-print(img1[0][0])
-
-print("dif ",fitness(img1,optimal,583,480))
-"""
-#Imagen de padre 1 mutado
-imagen.mutation()
-img = np.zeros((583,480,3), np.uint8)
-for circle in imagen.adn:
-	cv2.circle(img,circle[0],circle[1],circle[2],-1)
-cv2.imwrite('mutado.png',img)
-
-#Imagen de padre 2
-img = np.zeros((583,480,3), np.uint8)
-for circle in imagen2.adn:
-	cv2.circle(img,circle[0],circle[1],circle[2],-1)
-cv2.imwrite('padre2.png',img)
-
-H1,H2 = imagen.crossover(imagen2)
-
-#Imagen de hijo 2
-img = np.zeros((583,480,3), np.uint8)
-for circle in H1.adn:
-	cv2.circle(img,circle[0],circle[1],circle[2],-1)
-cv2.imwrite('hijo1.png',img)
-
-#Imagen de hijo 2
-img = np.zeros((583,480,3), np.uint8)
-for circle in imagen2.adn:
-	cv2.circle(img,circle[0],circle[1],circle[2],-1)
-cv2.imwrite('hijo2.png',img)
-
 """
