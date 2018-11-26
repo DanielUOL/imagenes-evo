@@ -1,31 +1,89 @@
 import random
 import numpy as np
-from scipy import misc
-import matplotlib.pyplot as plt
-import imageio
+import cv2
+#from scipy import misc
+#import matplotlib.pyplot as plt
+#import imageio
 
 class Individual:
 
-	def __init__(self,n,w,h):
+	def __init__(self,n,w,h,r):
 		self.n = n
 		self.w = w
 		self.h = h
-		adn = []
+		self.r = r
+		self.adn = []
 		for i in range(n):
-			p1 = (random.randint(0,w),random.randint(0,h))
-			p2 = (random.randint(p1[0]-30,p1[0]+30),random.randint(p1[1]-30,p1+30))
-			p3 = (random.randint(p1[0]-30,p1[0]+30),random.randint(p1[1]-30,p1+30))
-			color = random.randint(0,255)
-			adn.append([p1,p2,p3,color])
+			center = (random.randint(0,w),random.randint(0,h))
+			radius = random.randint(0,r)
+			#color = random.randint(0,255)
+			color = 255
+			self.adn.append([center,radius,(color,color,color)])
 
+	def mutation(self):
+		for i in range(self.n//2):
+			point = random.randint(0,self.n-1)
+			center = (random.randint(0,self.w),random.randint(0,self.h))
+			radius = random.randint(0,self.r)
+			#color = random.randint(0,255)
+			color = 255
+			self.adn[point] = [center,radius,(color,color,color)]
 
-#imagen = Individual(100,480,360)
+	def crossover(self,I2):
+		point = random.randint(1,self.n-2)
+		adn1 = []
+		adn2 = []
+		for i in range(0,point):
+			adn1.append(self.adn[i])
+			adn2.append(I2.adn[i])
+		for i in range(point,self.n-1):
+			adn1.append(I2.adn[i])
+			adn2.append(self.adn[i])
 
-#face = misc.face()
-#misc.imsave('face.png',face)
-im = imageio.imread('face.png')
-print(im)
-plt.imshow(im)
-plt.show()
+		H1 = Individual(self.n,self.w,self.h,self.r)
+		H2 = Individual(self.n,self.w,self.h,self.r)
+		H1.adn = adn1
+		H2.adn = adn2
 
+		return H1,H2
 
+optimal = cv2.imread('manzana.png',0)
+
+n = 600
+resolution = 20
+
+imagen = Individual(n,480,583,resolution)
+imagen2 = Individual(n,480,583,resolution)
+
+#Imagen de padre 1
+img1 = np.zeros((583,480,3), np.uint8)
+for circle in imagen.adn:
+	cv2.circle(img1,circle[0],circle[1],circle[2],-1)
+cv2.imwrite('original.png',img1)
+
+#Imagen de padre 1 mutado
+imagen.mutation()
+img = np.zeros((583,480,3), np.uint8)
+for circle in imagen.adn:
+	cv2.circle(img,circle[0],circle[1],circle[2],-1)
+cv2.imwrite('mutado.png',img)
+
+#Imagen de padre 2
+img = np.zeros((583,480,3), np.uint8)
+for circle in imagen2.adn:
+	cv2.circle(img,circle[0],circle[1],circle[2],-1)
+cv2.imwrite('padre2.png',img)
+
+H1,H2 = imagen.crossover(imagen2)
+
+#Imagen de hijo 2
+img = np.zeros((583,480,3), np.uint8)
+for circle in H1.adn:
+	cv2.circle(img,circle[0],circle[1],circle[2],-1)
+cv2.imwrite('hijo1.png',img)
+
+#Imagen de hijo 2
+img = np.zeros((583,480,3), np.uint8)
+for circle in imagen2.adn:
+	cv2.circle(img,circle[0],circle[1],circle[2],-1)
+cv2.imwrite('hijo2.png',img)
