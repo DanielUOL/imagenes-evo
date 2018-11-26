@@ -47,6 +47,17 @@ class Individual:
 
 		return H1,H2
 
+
+def fitness(img,opt,h,w):
+	value = 0
+	for i in range(h):
+		for j in range(w):
+			#if img[i][j][0] != opt[i][j][0] or img[i][j][1] != opt[i][j][1] or img[i][j][2] != opt[i][j][2]:
+			#	value +=1
+			if img[i][j][0] != opt[i][j]:
+				value +=1
+	return value
+
 optimal = cv2.imread('manzana.png',0)
 
 n = 600
@@ -61,6 +72,13 @@ for circle in imagen.adn:
 	cv2.circle(img1,circle[0],circle[1],circle[2],-1)
 cv2.imwrite('original.png',img1)
 
+#dif = fitness(img1,optimal,480,583)
+print(optimal[90][164])
+print(optimal[230][320])
+print(img1[0][0])
+
+print("dif ",fitness(img1,optimal,583,480))
+"""
 #Imagen de padre 1 mutado
 imagen.mutation()
 img = np.zeros((583,480,3), np.uint8)
@@ -87,3 +105,5 @@ img = np.zeros((583,480,3), np.uint8)
 for circle in imagen2.adn:
 	cv2.circle(img,circle[0],circle[1],circle[2],-1)
 cv2.imwrite('hijo2.png',img)
+
+"""
