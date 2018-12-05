@@ -18,7 +18,7 @@ class Individual:
 			self.adn.append([center,radius,(color,color,color)])
 
 	def mutation(self):
-		for i in range(self.n//6):
+		for i in range(self.n//8):
 			point = random.randint(0,self.n-2)
 			center = (random.randint(0,self.w),random.randint(0,self.h))
 			radius = random.randint(0,self.r)
@@ -34,9 +34,11 @@ class Individual:
 		for i in range(0,point):
 			adn1.append(selfadn[i])
 			adn2.append(I2adn[i])
-		for i in range(point,self.n-1):
+		
+		for i in range(point,self.n):
 			adn1.append(I2adn[i])
 			adn2.append(selfadn[i])
+		
 
 		H1 = Individual(self.n,self.w,self.h,self.r)
 		H2 = Individual(self.n,self.w,self.h,self.r)
@@ -75,20 +77,22 @@ binaryopt[optimal>=200] = 1
 binaryopt[optimal<200] = 0
 
 C = 100  # Cantidad de circulos
-R = 46  # Radio
-N = 4  # Individuos
+R = 52  # Radio
+N = 20  # Individuos
 pm = 0.8  # Probabilidad de mutacion
 width = 480  # Ancho
 height = 583  # Alto
-G = 3000 # Numero de generaciones
+G = 5000 # Numero de generaciones
 n = 1
 
 Population = [Individual(C,width,height,R) for i in range(N)]
 for ind in Population:
-	ind.fitness(optimal)
+	ind.fitness(binaryopt)
 
 orig = Population[0]
-toImage(orig,"original.png")
+nombre = "originalC100R52I20G5000F"+str(Population[0].fit)+".png"
+toImage(orig,nombre)
+
 
 for i in range(G):
 	print("Generacion ",i)
@@ -121,8 +125,8 @@ for i in range(G):
 	Population = plebada[:N]
 	print(Population[0].fit)
 	name = str(n)+".png"
-	toImage(Population[0],name)
+	#toImage(Population[0],name)
 	n+=1
 
-
-toImage(Population[0],"Generacion3000.png")
+nombre = "C100R52I20G5000"+str(Population[0].fit)+".png"
+toImage(Population[0],nombre)
