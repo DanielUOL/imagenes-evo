@@ -1,10 +1,7 @@
 import random
 import numpy as np
 import cv2
-#from scipy import misc
-#import matplotlib.pyplot as plt
-#import imageio
-
+import copy
 class Individual:
 
 	def __init__(self,n,w,h,r):
@@ -32,13 +29,14 @@ class Individual:
 		point = random.randint(1,self.n-2)
 		adn1 = []
 		adn2 = []
-
+		selfadn = copy.deepcopy(self.adn)
+		I2adn = copy.deepcopy(I2.adn)
 		for i in range(0,point):
-			adn1.append(self.adn[i])
-			adn2.append(I2.adn[i])
+			adn1.append(selfadn[i])
+			adn2.append(I2adn[i])
 		for i in range(point,self.n-1):
-			adn1.append(I2.adn[i])
-			adn2.append(self.adn[i])
+			adn1.append(I2adn[i])
+			adn2.append(selfadn[i])
 
 		H1 = Individual(self.n,self.w,self.h,self.r)
 		H2 = Individual(self.n,self.w,self.h,self.r)
@@ -54,34 +52,48 @@ class Individual:
 
 		for circle in self.adn:
 			cv2.circle(img,circle[0],circle[1],circle[2],-1)
-
 		img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+		img[img==255] = 1
 		#err = np.sum((opt.astype("float") - img.astype("float")) ** 2)
 		#err /= float(opt.shape[0] * opt.shape[1]) 
 		mres = opt^img
-		err = mres.sum()/255
+		err = mres.sum()
 		self.fit = err
+
+
+def toImage(imgM,name):
+	img = np.zeros((583,480,3), np.uint8)
+	for circle in imgM.adn:
+		cv2.circle(img,circle[0],circle[1],circle[2],-1)
+	cv2.imwrite(name,img)
+
 
 optimal = cv2.imread('manzana.png')
 optimal = cv2.cvtColor(optimal, cv2.COLOR_BGR2GRAY)
+binaryopt = np.copy(optimal)
+binaryopt[optimal>=200] = 1
+binaryopt[optimal<200] = 0
 
 C = 100  # Cantidad de circulos
-R = 50  # Radio
-N = 30  # Individuos
+R = 46  # Radio
+N = 4  # Individuos
 pm = 0.8  # Probabilidad de mutacion
 width = 480  # Ancho
 height = 583  # Alto
-G = 1000 # Numero de generaciones
+G = 3000 # Numero de generaciones
+n = 1
 
 Population = [Individual(C,width,height,R) for i in range(N)]
 for ind in Population:
 	ind.fitness(optimal)
 
-orig = Population[0].fit
+orig = Population[0]
+toImage(orig,"original.png")
 
 for i in range(G):
 	print("Generacion ",i)
 	offspring = []
+	plebada = []
 	for j in range(N//2):
 		torneo = []
 		for i in range(2):
@@ -99,26 +111,18 @@ for i in range(G):
 		if random.random() <= pm:
 			H2.mutation()
 
-		H1.fitness(optimal)
-		H2.fitness(optimal)
+		H1.fitness(binaryopt)
+		H2.fitness(binaryopt)
 		offspring.append(H1)
 		offspring.append(H2)
 
 	plebada = Population + offspring
 	plebada.sort(key=lambda x: x.fit)
-	print(plebada[0].fit)
-	population = plebada[:N]
+	Population = plebada[:N]
+	print(Population[0].fit)
+	name = str(n)+".png"
+	toImage(Population[0],name)
+	n+=1
 
-print
-img1 = np.zeros((583,480,3), np.uint8)
-for circle in Population[0].adn:
-	cv2.circle(img1,circle[0],circle[1],circle[2],-1)
-cv2.imwrite('original.png',img1)
 
-print("antes",orig,"despues",Population[0].fit)
-"""
-img1 = np.zeros((583,480,3), np.uint8)
-for circle in imagen.adn:
-	cv2.circle(img1,circle[0],circle[1],circle[2],-1)
-cv2.imwrite('original.png',img1)
-"""
+toImage(Population[0],"Generacion3000.png")
